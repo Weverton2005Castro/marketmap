@@ -2,6 +2,8 @@ from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import sys
 from pathlib import Path
+import json
+from fastapi.responses import JSONResponse
 
 # Adicionar diretório pai ao path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -42,6 +44,27 @@ async def clear_db(data_dir: str = "data"):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+# Retornar o JSON gerado
+@app.get("/get-db")
+async def get_db(file_path: str = "data/quick_extracao.json"):
+    try:
+        path = Path(file_path)
+        if not path.exists():
+            raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Retorna o conteúdo JSON direto pro front
+        return JSONResponse(content=data)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="localhost", port=8000)
+
+# http://localhost:8000/get-db agr retorna no json do navegador 
+# http://localhost:8000/clear-data
+# http://localhost:8000/generate-db
